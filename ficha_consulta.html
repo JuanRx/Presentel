@@ -1,0 +1,262 @@
+<script>
+    function buscar(pActualPage, pSortOrder) {
+
+        var params = "&ppage=" + pActualPage;
+        params += "&porder=" + btoa(pSortOrder);
+        params += "&search=" + btoa($("#input_search").val());
+
+        load_page('?controlador=roles&accion=getAll' + params, 'Roles');
+
+    }
+</script>
+
+<!-- DataTables Example -->
+<div class="card mb-3">
+    
+
+    <div class="card-body">
+
+
+        <div class="row mb-2">
+            <div class="col-sm-12 col-md-1">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <label>Tematica: </label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6" >
+                <select name="rTematica" id="rTematica" class="form-control form-control-sm" required="required" onchange="javascript:obtenerTematica();">
+                        <option value=""></option>
+                </select>
+            </div>
+            <div class="col-sm-12 col-md-3" >
+                <input type="date" class="form-control form-control-sm" id="rFechaReporte" name="rFechaReporte" placeholder="Fecha del Reporte" required="required" onchange="javascript:obtenerTematica();">                       
+            </div>
+            <div class="col-sm-12 col-md-2">
+                <div id="dataTable_filter" class="dataTables_filter">
+                <input type="text" id="tInAprendices" class="form-control form-control-sm" hidden>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0" id="table_roles">
+                <thead>
+                    <tr>
+                        <th>Tipo Documento</th>
+                        <th>Documento</th>
+                        <th>Nombre Aprendiz</th>
+                        <th>Correo Electronico</th>
+                        <th>Estado Aprendiz</th>
+                        <th>Toma de asistencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tfoot hidden>
+                    <tr>
+                        <th></th>
+                        <th>Tipo Documento</th>
+                        <th>Documento</th>
+                        <th>Nombre Aprendiz</th>
+                        <th>Correo Electronico</th>
+                        <th>Estado Aprendiz</th>
+                        <th>Toma de asistencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </tfoot>
+
+                <tbody>
+                    <tr>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+         
+
+        
+
+    </div>
+    <script>
+        var total = 0;
+        id_usuarios = Array();
+        
+
+        $(function() {
+            var date = new Date();
+
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var day = String(date.getDate()).padStart(2,'0');
+
+            var fullDate = year + '-' + month + '-' + day;
+            document.getElementById("rFechaReporte").value = fullDate;
+            
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: "hover"
+            });
+            actualizarResultado();
+
+        });
+
+        function actualizarResultado() {
+
+            peticionApiGetToken(localStorage['url_api'] + "get_tematicas_ins?id_ficha=" + localStorage['seleccionar_ficha_id'], localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+
+                    var select = document.getElementById("rTematica");
+                    var item = data[i];
+                    select.options[0] = new Option("Seleccione una tematica" , "0");
+                    for (var i = 0; i < data.length; i++) {
+                        a=i+1;
+                        select.options[a] = new Option(data[i].nombre_tematica , data[i].id_tematica);
+                    }  
+
+            },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+
+        function obtenerTematica() {
+            var tematica = String(document.getElementById('rTematica').value);
+            var fechaReporte = String(document.getElementById('rFechaReporte').value);
+            
+            peticionApiGetToken(localStorage['url_api'] + "get_asistencia_ins?id_ficha=" + localStorage['seleccionar_ficha_id'] + "&id_tematica=" + tematica + "&fechaAsiste=" + fechaReporte, localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    
+                    // console.log("roles: " + data);
+                    $("#table_roles").empty();
+                    var cab = "<tr><th>Tipo Documento</th>";
+                    cab += "<th>Documento</th>";
+                    cab += "<th>Nombre Aprendiz</th>";
+                    cab += "<th>Correo Electronico</th>";
+                    cab += "<th>Estado Aprendiz</th>";
+                    cab += "<th>Toma de asistencia</th>";
+                    cab += "<th>Acciones</th></tr>";
+
+                   
+                    $('#table_roles').append(cab);
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        total = data.length;
+                        id_usuarios[i] = data[i].id_usuario;
+
+                        var item = data[i];
+                        var itemTxt = "<tr><td>" + item.tipo_doc + "</td>"; // Tarea
+                        itemTxt += "<td>" + item.documento + "</td>"; // Aplicación
+                        itemTxt += "<td>" + item.nombres + " " + item.apellidos + "</td>";
+                        itemTxt += "<td>" + item.nick + "</td>";
+                        itemTxt += "<td>" + item.estado + "</td>";
+                        itemTxt += "<td>" + item.toma_asistencia + "</td>";
+                        itemTxt += "<td>" ;
+                        itemTxt += "<a  title=\"Notificar Aprendiz\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:notificarUsuario('" + item.id_usuario + "');\">";
+                        itemTxt += "<i class=\"far fa-bell\"></i>";
+                        itemTxt += "</a>";
+
+                        /*itemTxt += "&nbsp;";
+                        itemTxt += "&nbsp;";
+
+                        itemTxt += "<a  title=\"Eliminar Usuario\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:eliminarUsuario('" + item.id_ficha + "');\">";
+                        itemTxt += "<i class=\"far fa-bell\"></i>";
+                        itemTxt += "</a>";*/
+
+                        itemTxt += "</td></tr>";
+
+                        $('#table_roles').append(itemTxt);
+
+                    }
+                    document.getElementById("tInAprendices").value = total;
+
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+
+        function registrarAsistencia() {
+            var tematica = String(document.getElementById('rTematica').value);
+            var fechaReporte = String(document.getElementById('rFechaReporte').value);
+            var names=document.getElementsByName('asistencia');
+            for (var i = 0; i < total; i++) {
+                var json = {};
+                var combo = document.getElementsByName('asistencia')[1]; // cpdigo
+                var selected = (i==1)? combo.options[combo.selectedIndex].text : names[i].value; 
+                        //alert(tematica);
+                        //alert(fechaReporte);
+                        //alert(selected);
+                        //alert(id_usuarios[i]);
+                    json = {
+                        "idAprendizFk": id_usuarios[i],
+                        "idTematicaFk": tematica,
+                        "idFichaFk": localStorage['seleccionar_ficha_id'],
+                        "tomaAsiste": selected,
+                        "fechaAsiste": fechaReporte
+                    };
+
+                peticionApiToken(localStorage['url_api'] + "save_asistencia", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    alert('Asistencia tomada con exito.');
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            );
+            }   
+
+        }
+
+        function notificarUsuario(id_usuario) {
+            localStorage['notificar_id_usuario'] = id_usuario
+                //console.log(json);
+                load_page("notificar_aprendiz.html");
+        }
+    </script>

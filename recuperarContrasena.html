@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Control de asistencia - Recuperar Contraseña</title>
+    <link href='images/favicon.jpg' rel='shortcut icon' type='image/jpg'>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <!-- Custom styles for this template-->
+    <link href="css/sb-admin.css" rel="stylesheet">
+
+    <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" type="text/css" href="plugins/metronotificationv7/css/MetroNotificationStyle.min.css">
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script language="Javascript" src="js/jquery-1.9.1.js"></script>
+    <script language="Javascript" src="js/file_input.js"></script>
+    <script src="js/peticiones.js"></script>
+    <script src="js/general.js"></script>
+
+</head>
+
+<body class="bg-light">
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+              <img src="images/Telework-rafiki.png" alt="Image" class="img-fluid">
+            </div>
+           
+        <div class="card card-login mx-auto mt-5" style="border-color: darkgray;">
+            <div align="center" class="card-header" style="border-color: darkgray;">
+                    <img src="images/logoP.png" />
+            </div>
+            <div class="card-body">
+                <a  title="volver" data-toggle="tooltip" data-placement="top" href="javascript:volver();"><i class="fas fa-long-arrow-alt-left fa-2x" style="color: #ea5935f6;"></i>
+                <div align="center"></a> Recuperar Contraseña</div>    
+                <BR>
+                <form action="" method="post" name="login1" id="login1">
+                    <div class="form-group">
+                        <div class="form-label-group">
+                            <input type="email" id="inputEmail" name="inputEmail" class="form-control" placeholder="Email address" required="required" autofocus="autofocus">
+                            <label for="inputEmail">Correo de usuario</label>
+                        </div>
+                    </div>                    
+                    <button class="btn btn-primary btn-block" type="submit" style="background-color: #ea5935f6; border-color: #ea5935f6;">Recuperar Contraseña</button>
+                </form>
+                <div class="text-center">
+                    <div id="divversion" class="d-block small"></div>
+                </div>
+
+                <div class="row" style="display:none" id="diverror">
+                    <div class="col">
+                        <div class="alert alert-danger mt-3" id="alerta">
+            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+
+    
+
+</body>
+
+<script src="plugins/metronotificationv7/js/MetroNotification.min.js"></script>
+
+<script>
+    $(function() {
+        $("#divversion").html("Versión " + localStorage['version_api']);
+        if (localStorage['nick_usuario']) {
+            $("#inputEmail").val(localStorage['nick_usuario']);
+        }
+    });
+
+    function volver(){
+        window.location.replace("login.html");
+    }
+
+    
+
+    $("#login1").submit(
+
+        function(event) {
+
+            event.preventDefault();
+
+            var json = {
+                "nick": $("#inputEmail").val(),
+                "razon": "Recuperar contrasena",
+                "asunto": " ",
+                "idFicha": "No"
+            };
+
+            peticionApi(localStorage['url_api'] + "send_correo", json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+
+                    alert("Se ha restablecido correctamente, por favor ingrese a su correo");
+                    window.location.replace("login.html");
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    $("#diverror").show();
+                    $("#alerta").html('Error: ' + data.message);
+                }
+            );
+        
+        }
+    );
+
+    function showPage(mostrar) {
+
+        localStorage['mostrar_loading'] = mostrar;
+
+        if (mostrar) {
+
+            mostrarLoading();
+
+        } else {
+
+            cerrarLoading();
+
+        }
+
+    }
+
+    function mostrarLoading() {
+
+        $.metroLoading({
+            title: localStorage['nombre_app'],
+            content: "Por favor espere hasta que finalice el proceso.",
+            fa: "fa-sync-alt",
+        });
+
+    }
+
+    function cerrarLoading() {
+        $.metroLoadingKill();
+    }
+</script>
+
+
+</html>

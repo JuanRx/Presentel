@@ -1,0 +1,266 @@
+
+
+<!-- DataTables Example -->
+<div class="card mb-3">
+    
+
+    <div class="card-body">
+
+
+        <div class="row mb-2">
+            <div class="col-sm-12 col-md-1">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <label>Tematica: </label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6" >
+                <select name="rTematica" id="rTematica" class="form-control form-control-sm" required="required" onchange="javascript:cargarRol();">
+                        <option value=""></option>
+                </select>
+            </div>
+            <div class="col-sm-12 col-md-3" >
+                <input type="date" class="form-control form-control-sm" id="rFechaReporte" name="rFechaReporte" placeholder="Fecha del Reporte" required="required" onchange="javascript:actualizarResultado();">                       
+            </div>
+            <div class="col-sm-12 col-md-3">
+                <div id="dataTable_filter" class="dataTables_filter">&nbsp;</div>
+            </div>
+        </div>
+
+
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0" id="table_roles">
+                <thead>
+                    <tr>
+                        <th>Tipo Documento</th>
+                        <th>Documento</th>
+                        <th>Nombre Aprendiz</th>
+                        <th>Correo Electronico</th>
+                        <th>Estado Aprendiz</th>
+                        <th>Toma de asistencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tfoot hidden>
+                    <tr>
+                        <th>Tipo Documento</th>
+                        <th>Documento</th>
+                        <th>Nombre Aprendiz</th>
+                        <th>Correo Electronico</th>
+                        <th>Estado Aprendiz</th>
+                        <th>Toma de asistencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </tfoot>
+
+                <tbody>
+                    <tr>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="col-sm-12 col-md-2">
+            <div id="dataTable_filter" class="dataTables_filter">
+            <button type="button" class="btn btn-primary btn-sm btn-block" onclick="javascript:registrarAsistencia()"><i class="fas fa-edit"></i> Registrar</button>
+            </div>
+        </div> 
+
+        
+
+    </div>
+    <script>
+        var total = 0;
+        id_usuarios = Array();
+        
+
+        $(function() {
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: "hover"
+            });
+            obtenerTematica();
+            actualizarResultado();
+        });
+
+        function actualizarResultado() {
+
+            peticionApiGetToken(localStorage['url_api'] + "get_aprendices?id_ficha=" + localStorage['seleccionar_ficha_id'], localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    
+                    // console.log("roles: " + data);
+                    $("#table_roles").empty();
+                    var cab = "<tr><th>Tipo Documento</th>";
+                    cab += "<th>Documento</th>";
+                    cab += "<th>Nombre Aprendiz</th>";
+                    cab += "<th>Correo Electronico</th>";
+                    cab += "<th>Estado Aprendiz</th>";
+                    cab += "<th>Toma de asistencia</th>";
+                    cab += "<th>Acciones</th></tr>";
+
+                   
+                    $('#table_roles').append(cab);
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        total = data.length;
+                        id_usuarios[i] = data[i].id_usuario;
+
+                        var item = data[i];
+                        var itemTxt = "<tr><td>" + item.tipo_doc + "</td>"; // Tarea
+                        itemTxt += "<td>" + item.documento + "</td>"; // Aplicación
+                        itemTxt += "<td>" + item.nombres + " " + item.apellidos + "</td>";
+                        itemTxt += "<td>" + item.nick + "</td>";
+                        itemTxt += "<td>" + item.estado + "</td>";
+                        itemTxt += "<td>";
+                        itemTxt += "<select name=\"asistencia\" class=\"form-control form-control-sm\" id=\"rAsistencia\">";
+                        itemTxt += "<option value=\"OK\">OK</option>";
+                        itemTxt += "<option value=\"X\">X</option>";
+                        itemTxt += "<option value=\"R\">R</option>";
+                        itemTxt += "<option value=\"E\">E</option>";
+                        itemTxt += "</select>";
+                        itemTxt +=  "</td>";
+                        
+                        itemTxt += "<td>";
+
+                        /*itemTxt += "<a  title=\"Seleccionar Ficha\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:seleccionarFicha('" + item.id_ficha + "'" + item.ficha + "');\">";
+                        itemTxt += "<i class=\"fas fa-search\"></i>";
+                        itemTxt += "</a>";
+
+                        itemTxt += "&nbsp;";*/
+                        itemTxt += "&nbsp;";
+
+                        itemTxt += "<a  title=\"Eliminar Usuario\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:eliminarUsuario('" + item.id_usuario + "');\">";
+                        itemTxt += "<i class=\"far fa-bell\"></i>";
+                        itemTxt += "</a>";
+
+                        itemTxt += "</td></tr>";
+
+                        $('#table_roles').append(itemTxt);
+
+                    }
+
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+
+        function eliminarUsuario(idUsuario) {
+            if (confirm('Esta seguro que lo desea eliminar?')) {
+                var json = {
+                    "id_usuario": idUsuario
+                };
+                //console.log(json);
+                peticionApiToken(localStorage['url_api'] + "remove_usuario", localStorage['token'], json,
+                    function() {
+                        //Aqui si tenemos un cargando, lo detenemos
+                    },
+                    function(data) {
+                        actualizarResultado();
+                    },
+                    function(err) {
+                        data = JSON.parse(err.responseText);
+                        alert(data.message);
+                    }
+                );
+            }
+        }
+
+        function obtenerTematica() {
+        peticionApiGetToken(localStorage['url_api'] + "get_tematicas_ins?id_ficha=" + localStorage['seleccionar_ficha_id'], localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    var date = new Date();
+
+                    var year = date.getFullYear();
+                    var month = date.getMonth() + 1;
+                    var day = String(date.getDate()).padStart(2,'0');
+
+                    var fullDate = year + '-' + month + '-' + day;
+                    document.getElementById("rFechaReporte").value = fullDate;
+
+                    var select = document.getElementById("rTematica");
+                    var item = data[i];
+
+                    for (var i = 0; i < data.length; i++) {
+                        select.options[i] = new Option(data[i].nombre_tematica , data[i].id_tematica);
+                    }  
+
+            },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+
+        function registrarAsistencia() {
+            var a = 0;
+            var tematica = String(document.getElementById('rTematica').value);
+            var fechaReporte = String(document.getElementById('rFechaReporte').value);
+            var names=document.getElementsByName('asistencia');
+            for (var i = 0; i < total; i++) {
+                var json = {};
+                var combo = document.getElementsByName('asistencia')[1]; // cpdigo
+                var selected = (i==1)? combo.options[combo.selectedIndex].text : names[i].value; 
+                        //alert(tematica);
+                        //alert(fechaReporte);
+                        //alert(selected);
+                        //alert(id_usuarios[i]);
+                    json = {
+                        "idAprendizFk": id_usuarios[i],
+                        "idTematicaFk": tematica,
+                        "idFichaFk": localStorage['seleccionar_ficha_id'],
+                        "tomaAsiste": selected,
+                        "fechaAsiste": fechaReporte
+                    };
+
+                peticionApiToken(localStorage['url_api'] + "save_asistencia", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            );
+            
+            }
+            a = i ;
+            if (a == total){
+                alert('Asistencia tomada con exito.'); 
+            }
+              
+
+        }
+    </script>

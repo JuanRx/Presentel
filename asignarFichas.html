@@ -1,0 +1,263 @@
+<script>
+    function buscar(pActualPage, pSortOrder) {
+
+        var params = "&ppage=" + pActualPage;
+        params += "&porder=" + btoa(pSortOrder);
+        params += "&search=" + btoa($("#input_search").val());
+
+        load_page('?controlador=roles&accion=getAll' + params, 'Roles');
+
+    }
+</script>
+
+<!-- DataTables Example -->
+<div class="card mb-3">
+    
+
+    <div class="card-body">
+
+
+        <div class="row mb-2">
+            <div class="col-sm-12 col-md-1">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <label>Ficha: </label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6" >
+                <select name="rFichas" id="rFichas" class="form-control form-control-sm" required="required">
+                        <option value=""></option>
+                </select>
+            </div>
+            <div class="col-sm-12 col-md-2">
+                <div id="dataTable_filter" class="dataTables_filter">
+                <input type="text" id="tInAprendices" class="form-control form-control-sm" hidden>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0" id="table_roles">
+                <thead>
+                    <tr>
+                        <th>Tipo Documento</th>
+                        <th>Documento</th>
+                        <th>Nombre Aprendiz</th>
+                        <th>Correo Electronico</th>
+                        <th>Estado Aprendiz</th>
+                        <th>Asignar</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tfoot hidden>
+                    <tr>
+                        <th></th>
+                        <th>Tipo Documento</th>
+                        <th>Documento</th>
+                        <th>Nombre Aprendiz</th>
+                        <th>Correo Electronico</th>
+                        <th>Estado Aprendiz</th>
+                        <th>Asignar</th>
+                        <th>Acciones</th>
+                    </tr>
+                </tfoot>
+
+                <tbody>
+                    <tr>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+        <div class="col-sm-12 col-md-2">
+            <div id="dataTable_filter" class="dataTables_filter">
+            <button type="button" class="btn btn-primary btn-sm btn-block" onclick="javascript:asignarFicha()"><i class="fas fa-edit"></i> Asignar</button>
+            </div>
+        </div> 
+         
+
+        
+
+    </div>
+    <script>
+        var total = 0;
+        id_usuarios = Array();
+        
+
+        $(function() {
+                        
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: "hover"
+            });
+            actualizarResultado();
+            obtenerTematica();
+
+        });
+
+        function obtenerTematica() {
+
+            peticionApiGetToken(localStorage['url_api'] + "get_all_fichas" , localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+
+                    var select = document.getElementById("rFichas");
+                    var item = data[i];
+                    for (var i = 0; i < data.length; i++) {
+                        select.options[i] = new Option(data[i].ficha , data[i].id_ficha);
+                    }  
+
+            },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+
+        function actualizarResultado() {
+            
+            peticionApiGetToken(localStorage['url_api'] + "get_usu_sin_ficha", localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    
+                    // console.log("roles: " + data);
+                    $("#table_roles").empty();
+                    var cab = "<tr><th>Tipo Documento</th>";
+                    cab += "<th>Documento</th>";
+                    cab += "<th>Nombre Aprendiz</th>";
+                    cab += "<th>Correo Electronico</th>";
+                    cab += "<th>Estado Aprendiz</th>";
+                    cab += "<th>Asignar</th>";
+                    cab += "<th>Acciones</th></tr>";
+
+                   
+                    $('#table_roles').append(cab);
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        total = data.length;
+                        id_usuarios[i] = data[i].id_usuario;
+
+                        var item = data[i];
+                        var itemTxt = "<tr><td>" + item.tipo_doc + "</td>"; // Tarea
+                        itemTxt += "<td>" + item.documento + "</td>"; // Aplicación
+                        itemTxt += "<td>" + item.nombres + " " + item.apellidos + "</td>";
+                        itemTxt += "<td>" + item.nick + "</td>";
+                        itemTxt += "<td>" + item.estado + "</td>";
+
+                        itemTxt += "<td>";
+                        
+                        itemTxt += "<select name=\"seleccion\" class=\"form-control form-control-sm\" id=\"rAsistencia\">";
+                        itemTxt += "<option value=\"ASIGNAR\">ASIGNAR</option>";
+                        itemTxt += "<option value=\"NO ASIGNAR\">NO ASIGNAR</option>";
+                        itemTxt += "</select>";
+                        itemTxt +=  "</td>";    
+                        itemTxt += "<td>" ;
+                        itemTxt += "<a  title=\"Seleccionar Ficha\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:seleccionarFicha('" + item.id_usuario + "');\">";
+                        itemTxt += "<i class=\"far fa-bell\"></i>";
+                        itemTxt += "</a>";
+
+                        /*itemTxt += "&nbsp;";
+                        itemTxt += "&nbsp;";
+
+                        itemTxt += "<a  title=\"Eliminar Usuario\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:eliminarUsuario('" + item.id_ficha + "');\">";
+                        itemTxt += "<i class=\"far fa-bell\"></i>";
+                        itemTxt += "</a>";*/
+
+                        itemTxt += "</td></tr>";
+
+                        $('#table_roles').append(itemTxt);
+                        
+
+                    }
+                    document.getElementById("tInAprendices").value = total;
+                    
+
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+
+        }
+
+        function asignarFicha() {
+            
+            var ficha = String(document.getElementById('rFichas').value);
+            var names=document.getElementsByName('seleccion');
+            for (var i = 0; i < total; i++) {
+                var json = {};
+                var combo = document.getElementsByName('seleccion')[1]; // cpdigo
+                var selected = (i==1)? combo.options[combo.selectedIndex].text : names[i].value;
+                if (selected === 'NO ASIGNAR') {
+                } else{
+
+                
+                    
+                 
+                        //alert(tematica);
+                        //alert(fechaReporte);
+                        //alert(selected);
+                        //alert(id_usuarios[i]);
+                    json = {
+                        "idUsuario": id_usuarios[i],
+                        "idFicha": ficha
+                    };
+
+                peticionApiToken(localStorage['url_api'] + "save_fichas_usuarios", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                    
+                },
+                function(data) {
+                    
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            
+                );
+                }
+            }
+            alert('Asignado(s) a la ficha con exito.');
+            load_page("asignarFichas.html");
+           
+
+        }
+    </script>

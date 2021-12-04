@@ -1,0 +1,114 @@
+<div class="row mt-3">
+    <div class="col">
+        <form method="post" id="form8" name="form8">
+            <div class="card mb-3">
+                <div class="card-body">
+
+                    <div class="form-group row">
+                        
+                        <div class="col-12 col-md-2">
+                            <label for="rTipoDoc">Tipo Documento</label>
+                            <input type="text" class="form-control form-control-sm" id="rTipoDoc" name="rTipoDoc" placeholder="Usuario del sitio web" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rDocumento">Documento</label>
+                            <input type="text" class="form-control form-control-sm" id="rDocumento" name="rDocumento" placeholder="Contraseña del usuario" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rAprendiz">Aprendiz</label>
+                            <input type="text" class="form-control form-control-sm" id="rAprendiz" name="rAprendiz" placeholder="Contraseña del usuario" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rNick">Correo</label>
+                            <input type="text" class="form-control form-control-sm" id="rNick" name="rNick" placeholder="Contraseña del usuario" required="required">
+                        </div>
+                    </div>                        
+                        <div class="form-group row">
+                            <div class="col-12 col-md-5" >
+                                <label for="rRazon">Razón</label>
+                                    <select name="rRazon" id="rRazon" class="form-control form-control-sm">
+                                        <option value="Notificacion inasistencias">Llamado de atención por inasistencias</option>
+                                        <option value=""> </option>
+                                    </select>
+                            </div>
+                        </div>
+                    
+                    
+                    
+
+                </div>
+            </div>
+
+            <a class="btn btn-primary btn-sm" href="#" onclick="volver();"><i class="fas fa-chevron-left"></i>
+                &nbsp;Volver&nbsp;</a>
+
+            <button id="btnGuardar" name="btnGuardar" class="btn btn-primary btn-sm" type="submit">
+					<i class="far fa-paper-plane"></i> Notificar
+				</button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function() {
+        $('[data-toggle="tooltip"]').tooltip({
+            trigger: "hover"
+        });
+
+        $(".chosen-select").chosen({
+            no_results_text: "Ops, no se encontro nada!"
+        });
+
+        peticionApiGetToken(localStorage['url_api'] + "get_info_aprendiz?id_usuario=" + localStorage['notificar_id_usuario'], localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+
+                    $("#rTipoDoc").val(data[0].tipo_doc),
+                    $("#rDocumento").val(data[0].documento),
+                    $("#rAprendiz").val(data[0].nombres),
+                    $("#rNick").val(data[0].nick)
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            );
+
+    });
+
+    function volver() {
+        load_page('contrasenas.html', 'Contraseñas');
+    }
+
+    $("#form8").submit(
+        function(event) {
+
+            event.preventDefault();
+
+            var json = {
+                "nick": $("#rNick").val(),
+                "razon": $("#rRazon").val(),
+                "asunto": " ",
+                "idFicha": localStorage['seleccionar_ficha_id']
+            };
+
+            peticionApiToken(localStorage['url_api'] + "send_correo", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    alert('Notificación enviada con exito.');
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            );
+
+        });
+
+</script>

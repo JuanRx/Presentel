@@ -1,0 +1,129 @@
+<script>
+    function buscar(pActualPage, pSortOrder) {
+
+        var params = "&ppage=" + pActualPage;
+        params += "&porder=" + btoa(pSortOrder);
+        params += "&search=" + btoa($("#input_search").val());
+
+       // load_page('?controlador=roles&accion=getAll' + params, 'Roles');
+
+    }
+</script>
+
+<!-- DataTables Example -->
+<div class="card mb-3">
+    
+
+    <div class="card-body">
+
+
+        <div class="row mb-2">
+            <div class="col-sm-12 col-md-1">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <label>Buscar: </label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <input type="search" value="" class="form-control form-control-sm" id="input_search">
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-2">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <button type="button" class="btn btn-primary btn-sm btn-block" onclick="javascript:buscar(1, '')"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-3">
+                <div id="dataTable_filter" class="dataTables_filter">&nbsp;</div>
+            </div>
+        </div>
+
+
+        <div class="col-sm-12 col-md-3">
+            <div id="chart"></div>
+        </div>
+
+
+        
+
+    </div>
+<script>
+        $(function() {
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: "hover"
+            });
+            actualizarResultado();
+        });
+
+        function actualizarResultado() {
+            var tipoLineas = {
+    bindto: '#chart',
+    data: {
+      columns: [
+        ['data1', 30, 200, 100, 400, 150, 250],
+        ['data2', 50, 20, 10, 40, 15, 25]
+      ],
+      groups: [
+        ['data1','data2']
+      ]
+    },
+  axis : {
+        y : {
+            tick: {
+                //format: d3.format("$,")
+                format: function (d) { return d+" €"; },
+              count: 5,
+              //values: [100, 1000, 10000]
+            }
+        }
+    }
+  /*,size: {
+    width: 640
+  }*/
+};
+
+var chart = c3.generate(tipoLineas);
+
+function tipoGrafica (tipo) {
+  var tipoPersonalizado = {};
+  $.extend(tipoPersonalizado, tipoLineas);
+  tipoPersonalizado.data.type = tipo;
+  return tipoPersonalizado;
+}
+
+$("#tipoGrafica").change(function(e) {  
+  chart = c3.generate(tipoGrafica($(this).find("option:selected").val()));
+});
+            
+        }
+
+
+        function eliminarUsuario(idUsuario) {
+            if (confirm('Esta seguro que lo desea eliminar?')) {
+                var json = {
+                    "id_usuario": idUsuario
+                };
+                //console.log(json);
+                peticionApiToken(localStorage['url_api'] + "remove_usuario", localStorage['token'], json,
+                    function() {
+                        //Aqui si tenemos un cargando, lo detenemos
+                    },
+                    function(data) {
+                        actualizarResultado();
+                    },
+                    function(err) {
+                        data = JSON.parse(err.responseText);
+                        alert(data.message);
+                    }
+                );
+            }
+        }
+
+
+        function seleccionarFicha(id_ficha, ficha) {
+
+            localStorage['seleccionar_ficha_id'] = id_ficha;
+            load_page("ficha_estadisticasIns.html");
+
+        }
+</script>

@@ -1,0 +1,9 @@
+{
+    "url_api": "http://localhost:8080/asistencia/servicios/",
+    "version_api": "1.0.1",
+    "nombre_app": "Control Asistencias",
+    "id_centro": 2,
+    "id_rol_admin": 4,
+    "id_rol_usuario": 29,
+    "cantidad_paginacion": 10
+}

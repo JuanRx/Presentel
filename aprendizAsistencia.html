@@ -1,0 +1,272 @@
+<script>
+    function buscar(pActualPage, pSortOrder) {
+
+        var params = "&ppage=" + pActualPage;
+        params += "&porder=" + btoa(pSortOrder);
+        params += "&search=" + btoa($("#input_search").val());
+
+        load_page('?controlador=roles&accion=getAll' + params, 'Roles');
+
+    }
+</script>
+
+<!-- DataTables Example -->
+<div class="card mb-3">
+    
+
+    <div class="card-body">
+
+
+        <div class="row mb-2">
+            <div class="col-sm-12 col-md-1">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <label>Buscar: </label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <select name="rFiltro" id="rFiltro" class="form-control form-control-sm">
+                        <option disabled="">Opciones de busqueda:</option>
+                        <option value="X">Mostrar inasistencias</option>
+                        <option value="OK">Mostrar asistencias</option>
+                        <option value="E">Mostrar Excusas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-2">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <button type="button" class="btn btn-primary btn-sm btn-block" onclick="javascript:filtroAsistencia();"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-3" >
+                <input type="date" class="form-control form-control-sm" id="rFechaReporte" name="rFechaReporte" placeholder="Fecha del Reporte" required="required" onchange="javascript:actualizarResultado();">                       
+            </div>
+            <div class="col-sm-12 col-md-2">
+                <div id="dataTable_filter" class="dataTables_filter">
+                <input type="text" id="tInAprendices" class="form-control form-control-sm" hidden>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0" id="table_roles">
+                <thead>
+                    <tr>
+                        <th>Nombre Tematica</th>
+                        <th>Instructor</th>
+                        <th>Toma Asistencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tfoot hidden>
+                    <tr>
+                        <th></th>
+                        <th>Tipo Documento</th>
+                        <th>Documento</th>
+                        <th>Nombre Aprendiz</th>
+                        <th>Correo Electronico</th>
+                        <th>Estado Aprendiz</th>
+                        <th>Toma de asistencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </tfoot>
+
+                <tbody>
+                    <tr>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+         
+
+        
+
+    </div>
+    <script>
+        var total = 0;
+        id_usuarios = Array();
+        var ficha = "";
+
+        $(function() {
+            var date = new Date();
+
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var day = String(date.getDate()).padStart(2,'0');
+
+            var fullDate = year + '-' + month + '-' + day;
+            document.getElementById("rFechaReporte").value = fullDate;
+            
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: "hover"
+            });
+            obtenerFicha();
+
+        });
+        
+        function obtenerFicha(){
+            peticionApiGetToken(localStorage['url_api'] + "get_fichas", localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    ficha = data[0].id_ficha;
+                    actualizarResultado();
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+
+        function actualizarResultado() {
+            var fechaReporte = String(document.getElementById('rFechaReporte').value);
+            
+            peticionApiGetToken(localStorage['url_api'] + "get_asistencia_apr?id_ficha=" + ficha + "&fechaAsiste=" + fechaReporte, localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    
+                    // console.log("roles: " + data);
+                    $("#table_roles").empty();
+                    var cab = "<tr><th>Nombre Tematica</th>";
+                    cab += "<th>Instructor</th>";
+                    cab += "<th>Toma Asistencia</th>";
+                    cab += "<th>Acciones</th></tr>";
+
+                   
+                    $('#table_roles').append(cab);
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        total = data.length;
+                        id_usuarios[i] = data[i].id_usuario;
+
+                        var item = data[i];
+                        var itemTxt = "<tr><td>" + item.nombre_tematica + "</td>"; // Tarea
+                        itemTxt += "<td>" + item.nombres + " " + item.apellidos + "</td>";
+                        itemTxt += "<td>" + item.toma_asistencia + "</td>";
+                        itemTxt += "<td>" ;
+                        itemTxt += "<a  title=\"Presentar Excusa\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:presentarExcusa('" + item.nombre_tematica + "','" + item.toma_asistencia + "','" + item.id_tematica + "');\">";
+                        itemTxt += "<i class=\"fas fa-scroll\"></i>";
+                        itemTxt += "</a>";
+
+                        /*itemTxt += "&nbsp;";
+                        itemTxt += "&nbsp;";
+
+                        itemTxt += "<a  title=\"Eliminar Usuario\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:eliminarUsuario('" + item.id_ficha + "');\">";
+                        itemTxt += "<i class=\"far fa-bell\"></i>";
+                        itemTxt += "</a>";*/
+
+                        itemTxt += "</td></tr>";
+
+                        $('#table_roles').append(itemTxt);
+
+                    }
+                    document.getElementById("tInAprendices").value = total;
+
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+    function presentarExcusa(nombre_tematica, toma_asistencia, id_tematica){
+        if (toma_asistencia === "X") {
+            localStorage['nombre_tematica_excusa'] = nombre_tematica;
+            localStorage['id_tematica_fk'] = id_tematica;
+            load_page("presentarExcusa.html", 'Presentar Excusa');
+
+        }else{
+            alert("No es necesario presentar excusa.");
+        }
+
+    }
+    
+    function filtroAsistencia(){
+        var filtroAsis = String(document.getElementById('rFiltro').value);
+        
+        peticionApiGetToken(localStorage['url_api'] + "get_filtro_asistencia?idFicha=" + ficha + "&tomaAsistencia=" + filtroAsis, localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    
+                    // console.log("roles: " + data);
+                    $("#table_roles").empty();
+                    var cab = "<tr><th>Nombre Tematica</th>";
+                    cab += "<th>Instructor</th>";
+                    cab += "<th>Toma Asistencia</th>";
+                    cab += "<th>Acciones</th></tr>";
+
+                   
+                    $('#table_roles').append(cab);
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        total = data.length;
+                        id_usuarios[i] = data[i].id_usuario;
+
+                        var item = data[i];
+                        var itemTxt = "<tr><td>" + item.nombre_tematica + "</td>"; // Tarea
+                        itemTxt += "<td>" + item.nombres + " " + item.apellidos + "</td>";
+                        itemTxt += "<td>" + item.toma_asistencia + "</td>";
+                        itemTxt += "<td>" ;
+                        itemTxt += "<a  title=\"Presentar Excusa\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:presentarExcusa('" + item.nombre_tematica + "','" + item.toma_asistencia + "','" + item.id_tematica + "');\">";
+                        itemTxt += "<i class=\"fas fa-scroll\"></i>";
+                        itemTxt += "</a>";
+
+                        /*itemTxt += "&nbsp;";
+                        itemTxt += "&nbsp;";
+
+                        itemTxt += "<a  title=\"Eliminar Usuario\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:eliminarUsuario('" + item.id_ficha + "');\">";
+                        itemTxt += "<i class=\"far fa-bell\"></i>";
+                        itemTxt += "</a>";*/
+
+                        itemTxt += "</td></tr>";
+
+                        $('#table_roles').append(itemTxt);
+
+                    }
+                    document.getElementById("tInAprendices").value = total;
+
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+
+    }
+        
+    </script>

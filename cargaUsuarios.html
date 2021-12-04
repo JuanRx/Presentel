@@ -1,0 +1,249 @@
+<html>
+    <head>
+        <script src="https://unpkg.com/read-excel-file@4.x/bundle/read-excel-file.min.js"></script>
+    </head>
+    <body>
+        <div class="card mb-3">
+    
+
+            <div class="card-body">
+        
+        
+                <div class="row mb-2">
+                    <div class="col-sm-12 col-md-1">
+                        <div id="dataTable_filter" class="dataTables_filter">
+                            <label>Rol: </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6" >
+                        <select name="rRol" id="rRol" class="form-control form-control-sm" required="required">
+                                <option value="ROL-58ce1734">Administrador</option>
+                                <option value="ROL-becf9471">Instructor</option>
+                                <option value="ROL-900ed58f">Aprendiz</option>
+                                <option value="ROL-697e0579">Coordinador</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-12 col-md-3">
+                            
+                        <input type="file" id="rFile" hidden/>
+                        <button type="button" class="btn btn-primary btn-sm btn-block" onclick="document.getElementById('rFile').click()"><i class="fas fa-file-upload"></i> Seleccionar Archivo</button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm btn-block" onclick="javascript:limpiartable();"><i class="fas fa-sync-alt"></i> Limpiar tabla</button>
+                    </div>     
+                    
+                    <div class="col-sm-12 col-md-3">
+                        <div id="dataTable_filter" class="dataTables_filter">&nbsp;</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0" id="table_roles">
+                        <thead>
+                            <tr>
+                                <th>Tipo Documento</th>
+                                <th>Documento</th>
+                                <th>Nombres </th>
+                                <th>Apellidos </th>
+                                <th>Correo Electronico</th>
+                            </tr>
+                        </thead>
+        
+                        <tfoot hidden>
+                            <tr>
+                                <th>Tipo Documento</th>
+                                <th>Documento</th>
+                                <th>Nombres </th>
+                                <th>Apellidos </th>
+                                <th>Correo Electronico</th>
+                            </tr>
+                        </tfoot>
+        
+                        <tbody>
+                            <tr>
+                                <td>
+                                    &nbsp;
+                                </td>
+                                <td>
+                                    &nbsp;
+                                </td>
+                                <td>
+                                    &nbsp;
+                                </td>
+                                <td>
+                                    &nbsp;
+        
+                                </td>
+                                <td>
+                                    &nbsp;
+        
+                                </td>
+                                
+                            </tr>
+                        </tbody>
+        
+                    </table>
+        
+                </div>
+        
+                <div class="col-sm-12 col-md-2">
+                    <div id="dataTable_filter" class="dataTables_filter">
+                    <button type="button" class="btn btn-primary btn-sm btn-block" onclick="javascript:cargarUsuarios()"><i class="fas fa-check"></i> Cargar</button>
+                    </div>
+                </div> 
+        
+                
+        
+            </div>
+    </body>
+</html>
+    <script>
+        var total = 0;
+        var datos = new Array();
+        var a = 0;
+
+        function limpiartable(){
+            load_page("cargaUsuarios.html");
+
+        }
+        
+        var input = document.getElementById("rFile");
+        input.addEventListener('change', function(){
+        readXlsxFile(input.files[0]).then(function(data){
+            total = data.length;
+            
+            for (let i = 0; i < data.length; i++) {        
+                datos[i] = data[i]; 
+                
+            data.map((row, index)=> {
+                if(i == 0){
+                    let table = document.getElementById("table_roles");
+                    generateTableHead(table, row);
+                }
+
+                if (i > 0) {
+                    let table = document.getElementById("table_roles");
+                    generateTableRows(table, row);
+                }
+              
+            
+
+            });
+        }
+        });
+        
+    });
+    
+    function generateTableHead(table, data){
+        let thead = table.createTHead();
+        let row = thead.insertRow();
+        for(let key of data){
+            let th = document.createElement('th');
+            let text = document.createTextNode(key);
+            th.appendChild(text);
+            row.appendChild(th);
+        }
+
+    }
+
+    function generateTableRows(table, data){
+        let newRow = table.insertRow(-1);
+        data.map((row, index)=>{
+            let newCell = newRow.insertCell();
+            let newText = document.createTextNode(row);
+            newCell.appendChild(newText);
+        })
+
+    }
+
+    function cargarUsuarios(){
+            var a = 0;
+            var cargaError = 0;
+            var rol = String(document.getElementById('rRol').value);
+            var opc = confirm("Desea continuar?");
+            if (opc == true) {
+                
+            
+            for (var i = 0; i < total; i++) {
+                var json = {};
+                        //alert(tematica);
+                        //alert(fechaReporte);
+                        //alert(selected);
+                        //alert(id_usuarios[i]);
+                   // json = {
+                     //   "apellidos": "string",
+                       // "nick": "string",
+                       // "idRol": rol,
+                       // "tipo_doc": "string",
+                       // "documento": "string",
+                       // "nombres": "string"
+                   // };
+                   json = {
+                       "tipo_doc" : datos[i][0],
+                       "documento" : datos[i][1],
+                       "nombres" : datos[i][2],
+                       "apellidos" : datos[i][3],
+                       "nick" : datos[i][4],
+                       "idRol" : rol,
+
+                        }
+
+                        peticionApiToken(localStorage['url_api'] + "save_usuario", localStorage['token'], json,
+                        function() {
+                        //Aqui si tenemos un cargando, lo detenemos
+                        },
+                        function(data) {
+                            enviarClave();
+                        },
+                        function(err) {
+                        data = JSON.parse(err.responseText);
+                        alert(data.message);
+                        cargaError = cargaError + 1;
+                        }
+                        );
+                             
+                
+                
+            
+                    }
+                    a = i ;
+                    if (a == total){
+                    if (cargaError > 0) {
+                        alert('Hubo errores en la carga');
+                        }
+                        }else{
+                        alert('Usuarios cargados con exito');
+                    }
+                }
+                
+                    
+    }
+        
+        function enviarClave(){
+            var json = {
+                "nick": datos[a][4],
+                "razon": "Usuario Nuevo",
+                "asunto": " ",
+                "idFicha": "No"
+            };
+
+            peticionApi(localStorage['url_api'] + "send_correo", json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+
+                    alert("Se ha notificado a los usuarios, correctamente");
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    $("#diverror").show();
+                    $("#alerta").html('Error: ' + data.message);
+                }
+            );
+
+        }
+
+        
+
+    </script>

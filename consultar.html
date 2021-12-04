@@ -1,0 +1,151 @@
+<script>
+    function buscar(pActualPage, pSortOrder) {
+
+        var params = "&ppage=" + pActualPage;
+        params += "&porder=" + btoa(pSortOrder);
+        params += "&search=" + btoa($("#input_search").val());
+
+        load_page('?controlador=roles&accion=getAll' + params, 'Roles');
+
+    }
+</script>
+
+<!-- DataTables Example -->
+<div class="card mb-3">
+    
+
+    <div class="card-body">
+
+
+        <div class="row mb-2">
+            <div class="col-sm-12 col-md-1">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <label>Buscar: </label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <input type="search" value="" class="form-control form-control-sm" id="input_search">
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-2">
+                <div id="dataTable_filter" class="dataTables_filter">
+                    <button type="button" class="btn btn-primary btn-sm btn-block" onclick="javascript:buscar(1, '')"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-3">
+                <div id="dataTable_filter" class="dataTables_filter">&nbsp;</div>
+            </div>
+        </div>
+
+
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0" id="table_roles">
+                <thead>
+                    <tr>
+                        <th>Ficha</th>
+                        <th>Programa</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tfoot>
+                    <tr>
+                        <th>Ficha</th>
+                        <th>Programa</th>
+                        <th>Acciones</th>
+                    </tr>
+                </tfoot>
+
+                <tbody>
+                    <tr>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            &nbsp;
+
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+
+        
+
+    </div>
+<script>
+        $(function() {
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: "hover"
+            });
+            actualizarResultado();
+        });
+
+        function actualizarResultado() {
+
+            peticionApiGetToken(localStorage['url_api'] + "get_fichas", localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    // console.log("roles: " + data);
+                    $("#table_roles").empty();
+                    var cab = "<tr><th>Ficha</th>";
+                    cab += "<th>Programa</th>";
+                    cab += "<th>Acciones</th></tr>";
+
+                   
+                    $('#table_roles').append(cab);
+
+                    for (var i = 0; i < data.length; i++) {
+
+                        var item = data[i];
+                        var itemTxt = "<tr><td>" + item.ficha + "</td>"; // Tarea
+                        itemTxt += "<td>" + item.programa + "</td>"; // Aplicación
+                        itemTxt += "<td>";
+
+                        itemTxt += "<a  title=\"Seleccionar Ficha\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:seleccionarFicha('" + item.id_ficha + "');\">";
+                        itemTxt += "<i class=\"fas fa-search\"></i>";
+                        itemTxt += "</a>";
+
+                        /*itemTxt += "&nbsp;";
+
+                        itemTxt += "<a  title=\"Eliminar Usuario\" data-toggle=\"tooltip\" data-placement=\"top\"  ";
+                        itemTxt += "href=\"javascript:eliminarUsuario('" + item.id_usuario + "');\">";
+                        itemTxt += "<i class=\"fas fa-trash-alt\"></i>";
+                        itemTxt += "</a>";*/
+
+                        itemTxt += "</td></tr>";
+
+                        $('#table_roles').append(itemTxt);
+
+                    }
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        }
+
+
+        function seleccionarFicha(id_ficha, ficha) {
+
+            localStorage['seleccionar_ficha_id'] = id_ficha;
+            load_page("ficha_consulta.html");
+
+        }
+</script>

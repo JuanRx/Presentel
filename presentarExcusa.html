@@ -1,0 +1,123 @@
+<html>
+
+<head>
+    <script src="https://unpkg.com/read-excel-file@4.x/bundle/read-excel-file.min.js"></script>
+</head>
+
+<body>
+    <div class="card mb-3">
+
+
+        <div class="card-body">
+
+            <div class="row mb-2">
+                
+                <div class="col-sm-12 col-md-1">
+                    <div id="dataTable_filter" class="dataTables_filter">
+                        <label>Tematica: </label>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div id="dataTable_filter" class="dataTables_filter">
+                        <input type="text" value="" readonly class="form-control form-control-sm" id="rTematica">
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12">
+                        <div id="dataTable_filter" class="dataTables_filter">&nbsp;</div>
+                </div>
+                
+                
+                <div class="col-sm-12 col-md-5">
+                    <input type="file" multiple id="rFile" name="rFile" accept=".jpg, .png, .jpeg" hidden />
+                    <button type="button" class="btn btn-primary btn-sm btn-block"
+                        onclick="document.getElementById('rFile').click()"><i class="fas fa-file-upload"></i>
+                        Seleccionar Archivo</button>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <div id="dataTable_filter" class="dataTables_filter">
+                        <button type="button" class="btn btn-primary btn-sm btn-block"
+                            onclick="javascript:cargarEvidencia()" id="rImgBase"><i class="fas fa-check"></i> Cargar</button>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <div id="dataTable_filter" class="dataTables_filter">&nbsp;</div>
+                </div>
+                <div class="table-responsive">
+                    <div id="preview" style="border-color: orangered; " class="card-body-img">
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <div id="dataTable_filter" class="dataTables_filter">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
+<script>
+    $(function() {            
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: "hover"
+            });
+            $("#rTematica").val(localStorage["nombre_tematica_excusa"]);
+            obtenerFicha
+        });
+    var ficha;
+    var input = document.getElementById("rFile");
+    input.addEventListener('change', function (e) {
+        let reader = new FileReader();
+        reader.readAsDataURL(e.target.files[0]);
+        reader.onload = function () {
+            let preview = document.getElementById('preview');
+            image = document.createElement('img');
+            image.src = reader.result;
+            preview.innerHTML = '';
+            preview.append(image);
+            data64 = image.src;
+            
+        }
+
+    });
+    
+    function obtenerFicha(){
+        peticionApiToken(localStorage['url_api'] + "get_fichas", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    ficha = data[0].id_ficha;                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+        );
+    };
+    
+    function cargarEvidencia(){
+        var data64Fix = data64.split(',')[1];
+
+        var json = {
+            "nick": localStorage['id_instuctor_fk'],
+            "idFicha": ficha,
+            "asunto": data64Fix,
+            "razon": "Envio Excusa"
+            }
+        peticionApiToken(localStorage['url_api'] + "send_correo", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    alert('Evidencia enviada con exito.');
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+        );
+
+    }
+
+</script>

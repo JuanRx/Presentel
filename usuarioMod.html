@@ -1,0 +1,131 @@
+<div class="row mt-3">
+    <div class="col">
+        <form method="post" id="form8" name="form8">
+            <div class="card mb-3">
+                <div class="card-body">
+
+                    <div class="form-group row">
+                        
+                        <div class="col-12 col-md-2">
+                            <label for="rTipoDoc">Tipo Documento</label>
+                            <input type="text" class="form-control form-control-sm" id="rTipoDoc" name="rTipoDoc" placeholder="Usuario del sitio web" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rDocumento">Documento</label>
+                            <input type="text" class="form-control form-control-sm" id="rDocumento" name="rDocumento" placeholder="Contraseña del usuario" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rAprendiz">Nombres</label>
+                            <input type="text" class="form-control form-control-sm" id="rNombres" name="rNombres" placeholder="Contraseña del usuario" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rAprendiz">Apellidos</label>
+                            <input type="text" class="form-control form-control-sm" id="rApellidos" name="rApellidos" placeholder="Contraseña del usuario" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rNick">Correo</label>
+                            <input type="text" class="form-control form-control-sm" id="rNick" name="rNick" placeholder="Contraseña del usuario" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rEstado">Estado</label>
+                            <select name="rEstado" id="rEstado" class="form-control form-control-sm">
+                                <option value="H">Activo</option>
+                                <option value="I">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rRol">Rol</label>
+                                    <select name="rRol" id="rRol" class="form-control form-control-sm">
+                                        <option value="ROL-58ce1734">Administrador</option>
+                                        <option value="ROL-becf9471">Instructor</option>
+                                        <option value="ROL-900ed58f">Aprendiz</option>
+                                        <option value="ROL-697e0579">Coordinador</option>
+                                    </select>
+                            </select>
+                        </div>
+                    </div>                                         
+                </div>
+            </div>
+
+            <a class="btn btn-primary btn-sm" href="#" onclick="volver();"><i class="fas fa-chevron-left"></i>
+                &nbsp;Volver&nbsp;</a>
+
+            <button id="btnGuardar" name="btnGuardar" class="btn btn-primary btn-sm" type="submit">
+					<i class="fas fa-user-edit"></i> Actualizar
+				</button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function() {
+        $('[data-toggle="tooltip"]').tooltip({
+            trigger: "hover"
+        });
+
+        $(".chosen-select").chosen({
+            no_results_text: "Ops, no se encontro nada!"
+        });
+
+        peticionApiGetToken(localStorage['url_api'] + "get_usuario?id_usuario=" + localStorage['id_usuario_mod'], localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+
+                    $("#rTipoDoc").val(data[0].tipo_doc),
+                    $("#rDocumento").val(data[0].documento),
+                    $("#rNombres").val(data[0].nombres),
+                    $("#rApellidos").val(data[0].apellidos),
+                    $("#rNick").val(data[0].nick),
+                    $("#rEstado").val(data[0].estado),
+                    $("#rRol").val(data[0].id_rol)
+
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            );
+
+    });
+
+    function volver() {
+        load_page('modificarUs.html', 'Modificar Usuarios');
+    }
+
+    $("#form8").submit(
+        function(event) {
+
+            event.preventDefault();
+
+            var json = {
+                
+                "nick": $("#rNick").val(),
+                "apellidos": $("#rApellidos").val(),
+                "idUsuario": localStorage['id_usuario_mod'],
+                "id_rol_fk": $("#rRol").val(),
+                "documento": $("#rDocumento").val(),
+                "tipoDoc": $("#rTipoDoc").val(),
+                "estado": $("#rEstado").val(),
+                "nombres": $("#rNombres").val()
+
+            };
+
+            peticionApiToken(localStorage['url_api'] + "update_usuario", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    alert('Actualizacion del usuario exitosa.');
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            );
+
+        });
+
+</script>

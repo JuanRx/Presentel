@@ -1,0 +1,159 @@
+<div class="row mt-3">
+    <div class="col">
+        <form method="post" id="form8" name="form8">
+            <div class="card mb-3">
+                <div class="card-body">
+
+                    <div class="form-group row">
+                        
+                        <div class="col-12 col-md-4">
+                            <label for="rNombreTema">Nombre Tematica</label>
+                            <input type="text" class="form-control form-control-sm" id="rNombreTema" name="rNombreTema" placeholder="Nombre de la tematica" required="required">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="rFicha">Ficha</label>
+                            <select name="rFicha" id="rFicha" class="form-control form-control-sm">
+                                <option value=""></option>
+                            </select>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-5">
+                            <label for="rInstructor">Instructor</label>
+                                    <select name="rInstructor" id="rInstructor" class="form-control form-control-sm">
+                                        <option value=""></option>
+                                    </select>
+                            </select>
+                        </div>
+                    </div>                                         
+                </div>
+            </div>
+
+            <a class="btn btn-primary btn-sm" href="#" onclick="volver();"><i class="fas fa-chevron-left"></i>
+                &nbsp;Volver&nbsp;</a>
+
+            <button id="btnGuardar" name="btnGuardar" class="btn btn-primary btn-sm" type="submit">
+					<i class="fas fa-edit"></i> Editar
+				</button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function() {
+        $('[data-toggle="tooltip"]').tooltip({
+            trigger: "hover"
+        });
+
+        $(".chosen-select").chosen({
+            no_results_text: "Ops, no se encontro nada!"
+        });
+
+        cargaInfo();
+        obtenerTematica();
+
+    });
+
+    function volver() {
+        load_page('tematicas.html', 'Tematica');
+    }
+
+    function cargaInfo(){
+        peticionApiGetToken(localStorage['url_api'] + "get_all_fichas", localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                   
+                    var select = document.getElementById("rFicha");
+                    var item = data[i];
+
+                    for (var i = 0; i < data.length; i++) {
+                        select.options[i] = new Option(data[i].ficha , data[i].id_ficha);
+                    }  
+
+            },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+        
+            peticionApiGetToken(localStorage['url_api'] + "get_all_instructores", localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                   
+                    var select = document.getElementById("rInstructor");
+                    var item = data[i];
+
+                    for (var i = 0; i < data.length; i++) {
+                        select.options[i] = new Option(data[i].nombres + " " + data[i].apellidos , data[i].id_usuario);
+                    }  
+
+            },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+    }
+
+    function obtenerTematica(){
+        peticionApiGetToken(localStorage['url_api'] + "get_tematica?id_tematica=" + localStorage['id_tematica_mod'], localStorage['token'],
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                   
+                    $("#rNombreTema").val(data[0].nombre_tematica),
+                    $("#rFicha").val(data[0].id_ficha_fk),
+                    $("#rInstructor").val(data[0].id_instructor_fk)
+
+                     
+
+            },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+
+                }
+            );
+    }
+
+    $("#form8").submit(
+        function(event) {
+
+            event.preventDefault();
+            var ficha = String(document.getElementById('rFicha').value);
+            var instructor = String(document.getElementById('rInstructor').value);
+            var json = {
+                
+                "nombreTematica": $("#rNombreTema").val(),
+                "idFichaFk": ficha,
+                "idInstructorFk": instructor,
+                "idTematica" : localStorage['id_tematica_mod']
+
+            };
+
+            peticionApiToken(localStorage['url_api'] + "update_tematica", localStorage['token'], json,
+                function() {
+                    //Aqui si tenemos un cargando, lo detenemos
+                },
+                function(data) {
+                    alert('Tematica actualizada con exito.');
+                    load_page("tematicas.html");
+                },
+                function(err) {
+                    data = JSON.parse(err.responseText);
+                    alert(data.message);
+                }
+            );
+
+        }
+    );
+
+</script>
